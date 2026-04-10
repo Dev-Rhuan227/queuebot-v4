@@ -1,34 +1,21 @@
 # 🎯 Benchmark Absoluto do Franco-Atirador
-*Um guia de Teste de Vida para o Módulo de Alta Performance do QueueBot v4.*
+*Um guia de Teste de Vida para o Módulo de Alta Performance do QueueBot v4. Adaptado para execução nativa no Servidor (sem requerer Node ou NPM instalados na máquina host).*
 
-Essa seção foi projetada para que você ponha à prova de fogo a capacidade bélica do seu Container 5 (Responsável exclusivo por monitorar as mensagens de grupo, sem consultar banco de dados, atuando unicamente via Memória RAM e Puppeteer Otimizado).
-
-Nós vamos subir *apenas* a infraestrutura de linha de frente para testar se a latência te vence ou você vence ela.
-
----
-
-### Instalação e Preparação
-
-Antes de tudo, garanta que você instalou a pequena biblioteca de dependências no diretório root para executar o simulador com segurança na sua máquina/servidor onde fará o teste:
-
-```bash
-# Na raiz do projeto, instale o IORedis (O Cliente Redis)
-npm install ioredis
-```
+Essa seção foi projetada para que você ponha à prova de fogo a capacidade bélica do seu Container 5 (Responsável exclusivo por monitorar as mensagens de grupo, atuando unicamente via Memória RAM).
 
 ---
 
 ### Passo 1: Erguer o Campo de Batalha (Isolado)
 
-Não precisaremos do Frontend, nem do Backend (Cérebro Prisma) e nem do PostgreSQL para esse teste brutal. Vamos erguer apenas o Redis (O sangue da comunicação) e o Whatsapp-API (O fuzil).
+Não precisaremos do Frontend, nem do Backend (Cérebro Prisma) e nem do PostgreSQL para esse teste brutal. Vamos erguer apenas o Redis e o Whatsapp-API.
 
-Execute pelo terminal:
+Execute pelo terminal do seu servidor:
 
 ```bash
 # Sobe apenas os serviços fundamentais para a blitz
 docker-compose up -d redis whatsapp-api
 
-# Opcional: Acompanhar os logs ao vivo pra ler o cronômetro!
+# Vamos deixar os logs abertos em uma aba para acompanhar a velocidade de resposta:
 docker-compose logs -f whatsapp-api
 ```
 
@@ -36,49 +23,51 @@ docker-compose logs -f whatsapp-api
 
 ### Passo 2: Logando seu Aparelho Principal
 
-Com o Container 5 rodando orgulhosamente, precisamos ler as iniciais da Autenticação.
+Em **OUTRA** aba do seu terminal SSH do servidor, dispare os comandos CURL abaixo para solicitar e verificar o QR Code de login, substituindo a parte `"userId": "SEUTELEFONEAQUI@c.us"` pelo seu número exato (Ex: `5511999999999@c.us`):
 
-Abra o seu Postman/Insomnia (ou até via curL) e rode esse pequeno disparo na porta que está exposta:
-
-```http
-POST http://localhost:3001/session/start
-Content-Type: application/json
-
-{
-    "userId": "SEUTELEFONEAQUI@c.us"
-}
+1. **Inicie a sessão**:
+```bash
+curl -X POST http://localhost:3001/session/start \
+     -H "Content-Type: application/json" \
+     -d '{"userId": "SEUTELEFONEAQUI@c.us"}'
 ```
 
-E em seguida, fique pedindo o `GET http://localhost:3001/session/SEUTELEFONEAQUI@c.us/status` até a resposta cair pra `QR_CODE_READY`.
-*(Como a UI está offline pra esse teste restrito, pegue a string base64 que voltar no JSON, cole em um decodificador online (https://codebeautify.org/base64-to-image-converter), aponte o celular e estará LOGADO).*
+2. **Pegue o QR Code**:
+```bash
+# Fique rodando este até aparecer a string gigante do Base64
+curl http://localhost:3001/session/SEUTELEFONEAQUI@c.us/status
+```
+
+*(Pegue apenas a gigantesca string Base64 que virá na variável `qr`, cole no seu navegador em formato URL ou em um decodificador online (https://codebeautify.org/base64-to-image-converter), e escaneie o código com seu celular.)*
+
+Quando o status mudar via Curl para `CONNECTED`, o bot está pronto.
 
 ---
 
 ### Passo 3: Injetando a Simulação 
 
-Abra o arquivo recém-criado na raiz do projeto: `simulate-redis.js`.
-
-Altere as 3 constantes (Elas dizem quem deve ganhar de verdade):
-1. `userId`: Deixe exatamente como o ID do Telefone que usou para logar lá em cima.
-2. `companyId`: Coloque o ID da "Empresa Falsa" (Bote o ID de um segundo aparelho de celular *SEU* ou de alguém do convívio que tem internet das mais rápidas).
-3. `groupId`: Coloque o ID de Grupo onde os stickers de pedido caem. (As numerações dos grupos tem o final `@g.us`).
-
-Salve!
-
-Agora aperte o gatilho fora do docker apenas para popular a RAM do container C5 silenciosamente:
-
+Abra o arquivo auxiliar criado na raiz do seu projeto e edite os números de testes:
 ```bash
-node simulate-redis.js
+nano simulate.sh
 ```
+
+Preencha as 3 variáveis no topo do arquivo (Seu número, número da empresa que enviará os stickers e ID do grupo) e **salve**.
+
+Para simular o disparo de autorização da Fila na memória RAM, rode o script Bash (Pois ele roda via container Redis direto, não exigindo nada do seu servidor!):
+```bash
+bash simulate.sh
+```
+
+Logo após executar, você verá no terminal dos logs do Whatsapp-API o bot gritando que *"A Fila Foi Atualizada"*!
 
 ---
 
 ### Passo 4: O Teste Definitivo!
 
-- Pegue aquele *Segundo Celular* (ou peça pro seu amigo com o dedo mais rápido do Oeste).
-- Com o olho na tela onde está passando os `logs -f whatsapp-api`.
-- Peça para ele **MANDAR UM STICKER (Figurinha)** rápido no Grupo configurado.
+- Pegue o WhatsApp da *Empresa Cliente* e entre no Grupo mapeado.
+- Deixe seu olho fixo na tela preta do servidor onde os logs (`logs -f`) estão rodando.
+- **Mande UM STICKER (Figurinha)** de corrida no Grupo configurado.
 
-O bot vai pular sobre a mensagem no momento imediato. Interceptar a resposta sem tráfego SQL e sem processamento extra-lixo. E cravará na sua tela o Log Vermelho do Benchmark.
+O bot vai pular sobre a mensagem no momento imediato com sua RegEx, fará um Match O(1) com as suas permissões pré-carregadas pelo `simulate.sh` e executará o `reply` ultra-veloz. E cravará na sua tela o Log Vermelho do Benchmark de latência final.
 
-Desafie essa latência.🚀
+Aproveite seus milissegundos. 🚀
