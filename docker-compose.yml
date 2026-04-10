@@ -18,9 +18,9 @@ services:
     ports:
       - "3333:3333"
     environment:
-      - DATABASE_URL=postgres://queuebot_user:senha_super_segura@database:5432/queuebot_db
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - DATABASE_URL=${DATABASE_URL:-postgres://queuebot_user:senha_super_segura@database:5432/queuebot_db}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
     depends_on:
       - database
       - redis
@@ -33,9 +33,9 @@ services:
     container_name: queuebot_postgres
     image: postgres:15-alpine
     environment:
-      - POSTGRES_USER=queuebot_user
-      - POSTGRES_PASSWORD=senha_super_segura
-      - POSTGRES_DB=queuebot_db
+      - POSTGRES_USER=${POSTGRES_USER:-queuebot_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-senha_super_segura}
+      - POSTGRES_DB=${POSTGRES_DB:-queuebot_db}
     ports:
       - "5432:5432"
     volumes:
