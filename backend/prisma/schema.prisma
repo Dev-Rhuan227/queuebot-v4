@@ -1,0 +1,98 @@
+// This is your Prisma schema file.
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// O Entregador (Motoboy) do SaaS
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  phoneId   String   @unique // Numero de telefone com @c.us (ex: 5511999999999@c.us)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  whitelists     Whitelist[]
+  queuePositions QueuePosition[]
+  deliveryRuns   DeliveryRun[]
+}
+
+// O Loja/Restaurante/Empresa que solicita motoboys
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  phoneId   String   @unique // Numero da empresa @c.us (ex: 5511888888888@c.us)
+  createdAt DateTime @default(now())
+
+  whitelists   Whitelist[]
+  deliveryRuns DeliveryRun[]
+}
+
+// Relação N:N de permissão entre o Entregador e a Empresa
+// Define quais empresas o entregador está autorizado a "pegar" corridas
+model Whitelist {
+  id        String   @id @default(uuid())
+  userId    String
+  companyId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, companyId]) // Garante que não tenha relação duplicada
+}
+
+// Categorias/Grupos VIP de WhatsApp
+model GroupCategory {
+  id          String   @id @default(uuid())
+  name        String   // Ex: "Rodrigo Express VIP"
+  groupId     String   @unique // O ID string do grupo no WhatsApp (ex: 120155555@g.us)
+  createdAt   DateTime @default(now())
+
+  queuePositions QueuePosition[]
+}
+
+// A tabela viva de ordenação de fila
+model QueuePosition {
+  id              String   @id @default(uuid())
+  userId          String
+  groupCategoryId String
+  
+  // orderIndex indica a posição na fila (ex: 1, 2, 3...)
+  // Menor valor ganha
+  orderIndex      Int      
+
+  joinedAt        DateTime @default(now())
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groupCategory GroupCategory @relation(fields: [groupCategoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupCategoryId]) // Um usuário só pode estar em 1 posição naquele grupo
+}
+
+// Histórico Financeiro e Logístico da Corrida
+model DeliveryRun {
+  id        String   @id @default(uuid())
+  userId    String
+  companyId String
+  
+  // Tempos de Rastreio (Lifecyle da Corrida)
+  capturedAt       DateTime  @default(now()) // Hora que o Franco-Atirador respondeu "Eu"
+  pickedUpAt       DateTime? // Hora da retirada do pedido
+  deliveredAt      DateTime? // Hora da finalização no cliente
+  returnedToBaseAt DateTime? // Hora do acerto (devolução de maquininha/dinheiro)
+  
+  // Financeiro
+  deliveryValue    Float     @default(0.0) // Valor da taxa/corrida
+  paymentMethod    String?   // Pix, Cash, Pending
+  status           String    @default("CAPTURED") // CAPTURED, IN_TRANSIT, DELIVERED, SETTLED
+
+  user    User    @relation(fields: [userId], references: [id])
+  company Company @relation(fields: [companyId], references: [id])
+}

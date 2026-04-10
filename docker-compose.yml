@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # 1. FRONTEND (O Painel do Motoboy)
+  frontend:
+    container_name: queuebot_frontend
+    build: ./frontend # Caminho para a pasta do frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - queuebot_network
+    restart: unless-stopped
+
+  # 2. BACKEND (O Cérebro Financeiro e Gestor de Filas)
+  backend:
+    container_name: queuebot_backend
+    build: ./backend # Caminho para a pasta do backend
+    ports:
+      - "3333:3333"
+    environment:
+      - DATABASE_URL=postgres://queuebot_user:senha_super_segura@database:5432/queuebot_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - database
+      - redis
+    networks:
+      - queuebot_network
+    restart: unless-stopped
+
+  # 3. BANCO DE DADOS (PostgreSQL - Robusto para o SaaS financeiro)
+  database:
+    container_name: queuebot_postgres
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=queuebot_user
+      - POSTGRES_PASSWORD=senha_super_segura
+      - POSTGRES_DB=queuebot_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - queuebot_network
+    restart: unless-stopped
+
+  # 4. REDIS (A Ponte de Alta Velocidade)
+  redis:
+    container_name: queuebot_redis
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - queuebot_network
+    restart: unless-stopped
+
+  # 5. WHATSAPP API (O "Franco-Atirador" Isolado)
+  whatsapp-api:
+    container_name: queuebot_whatsapp
+    build: ./whatsapp-api # Caminho para a pasta do script puro do bot
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      # Volume crucial para salvar as sessões e não pedir QR Code toda hora
+      - whatsapp_sessions:/app/.wwebjs_auth
+    depends_on:
+      - redis
+    networks:
+      - queuebot_network
+    restart: unless-stopped
+    # Permite que o Puppeteer rode tranquilamente no Docker
+    cap_add:
+      - SYS_ADMIN
+
+networks:
+  queuebot_network:
+    driver: bridge
+
+volumes:
+  pgdata:
+  redisdata:
+  whatsapp_sessions:

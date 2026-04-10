@@ -1,0 +1,63 @@
+# ==========================================
+# Node.js & C# .NET Environment
+# ==========================================
+
+# Dependências (Dependencies)
+node_modules/
+bin/
+obj/
+packages/
+*.nupkg
+jspm_packages/
+
+# Segurança (Security)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+secret.json
+
+# Logs e Cache (Logs and Cache)
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.eslintcache
+.cache/
+.npm/
+
+# Builds e Output (Builds)
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# WhatsApp Web JS (Segurança de Sessão)
+# Ignorar diretórios de cache e autenticação para não vazar a sessão conectada
+.wwebjs_auth/
+.wwebjs_cache/
+
+# Sistema e IDEs (System and IDEs)
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln.docstates
+*.user
+*.userosscache
+*.sln.user
