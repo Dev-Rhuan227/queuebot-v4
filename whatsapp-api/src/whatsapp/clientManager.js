@@ -12,9 +12,12 @@ const initializeClient = (userId) => {
 
     console.log(`[ClientManager] Inicializando sessão ${userId}...`);
 
+    // Remove o '@c.us' ou qualquer caractere especial para que o LocalAuth aceite
+    const safeClientId = String(userId).replace(/[^a-zA-Z0-9_-]/g, '_');
+    
     // Usando LocalAuth para reter a sessão (evita logins recorrentes)
     const client = new Client({
-        authStrategy: new LocalAuth({ clientId: `user_${userId}` }),
+        authStrategy: new LocalAuth({ clientId: `user_${safeClientId}` }),
         puppeteer: {
             headless: true,
             args: [
