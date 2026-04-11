@@ -39,10 +39,12 @@ module.exports = function configureMessageListener(client, userId) {
 
         // [Ação] Tudo validado em tempo real (O(1)). Capturar a corrida!
         try {
+            const ramMatchTime = performance.now(); // Tempo exato que o cérebro levou pra tomar a decisão!
+            
             // Cita a mensagem recebida respondendo "Eu"
             await msg.reply("Eu");
             
-            const endTime = performance.now(); // 🛑 TRAVAMENTO DO CRONÔMETRO!
+            const networkAckTime = performance.now(); // Tempo que o Servidor do WhatsApp demorou pra processar o disparo
 
             // Avisa imediatamente o Backend via emissão Redis Pub/Sub
             // O Backend cuidará de retirar esse usuário da fila globalmente e gravar no postgres
@@ -53,9 +55,11 @@ module.exports = function configureMessageListener(client, userId) {
                 timestamp: Date.now()
             }));
 
-            console.log(`⚡ [SNIPER MODE] Corrida capturada! UserId: ${userId} -> Empresa: ${senderId} -> Grupo: ${groupId}`);
+            console.log(`⚡ [SNIPER MODE] ALVO ABATIDO! UserId: ${userId} -> Empresa: ${senderId}`);
             console.log(`\n======================================================`);
-            console.log(`⏱️  [BENCHMARK] Tempo real de reação: ${(endTime - startTime).toFixed(3)} ms`);
+            console.log(`🧠 [PENSAMENTO]: ${(ramMatchTime - startTime).toFixed(3)} ms (Leitura, Filtros e Match Total na RAM)`);
+            console.log(`📡 [DISPARO]: ${(networkAckTime - ramMatchTime).toFixed(3)} ms (Latência Websocket com Servidor da Meta)`);
+            console.log(`⏱️ [TOTAL]: ${(networkAckTime - startTime).toFixed(3)} ms`);
             console.log(`======================================================\n`);
         } catch (error) {
             console.error(`[ERRO] Falha ao capturar corrida. UserId: ${userId}. Erro:`, error);
