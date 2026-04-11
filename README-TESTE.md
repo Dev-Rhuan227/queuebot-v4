@@ -27,7 +27,7 @@ Em **OUTRA** aba do seu terminal SSH do servidor, dispare os comandos CURL abaix
 
 1. **Inicie a sessão**:
 ```bash
-curl -X POST http://localhost:3001/session/start \
+curl -X POST http://localhost:3005/session/start \
      -H "Content-Type: application/json" \
      -d '{"userId": "SEUTELEFONEAQUI@c.us"}'
 ```
@@ -35,7 +35,7 @@ curl -X POST http://localhost:3001/session/start \
 2. **Pegue o QR Code**:
 ```bash
 # Fique rodando este até aparecer a string gigante do Base64
-curl http://localhost:3001/session/SEUTELEFONEAQUI@c.us/status
+curl http://localhost:3005/session/SEUTELEFONEAQUI@c.us/status
 ```
 
 *(Pegue apenas a gigantesca string Base64 que virá na variável `qr`, cole no seu navegador em formato URL ou em um decodificador online (https://codebeautify.org/base64-to-image-converter), e escaneie o código com seu celular.)*
