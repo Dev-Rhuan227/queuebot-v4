@@ -20,15 +20,22 @@ module.exports = function configureMessageListener(client, userId) {
         const groupId = msg.from; 
         const senderId = msg.author || msg.from; 
 
+        // DEBUG TEMPORÁRIO DE IDENTIFICADORES:
+        console.log(`\n🕵️ [DEBUG DE STICKER] Temos um sticker num grupo!`);
+        console.log(`🕵️ ID Real do Grupo recebido: ${groupId}`);
+        console.log(`🕵️ ID Real de quem enviou: ${senderId}`);
+        
+        const checkPos = memoryState.isUserPositionOne(groupId, userId);
+        const checkWhite = memoryState.isCompanyWhitelisted(userId, senderId);
+        
+        console.log(`🕵️ O Bot (${userId}) é o Top 1 do grupo? -> ${checkPos}`);
+        console.log(`🕵️ A pessoa (${senderId}) está na whitelist? -> ${checkWhite}`);
+
         // [Filtro 1] RAM Check: O usuário desta sessão é o Número 1 na fila deste grupo?
-        if (!memoryState.isUserPositionOne(groupId, userId)) {
-            return; // Interrompe para poupar CPU.
-        }
+        if (!checkPos) return;
 
         // [Filtro 2] RAM Check: A empresa que mandou a msg está na Whitelist deste usuário?
-        if (!memoryState.isCompanyWhitelisted(userId, senderId)) {
-            return; // Interrompe para poupar CPU.
-        }
+        if (!checkWhite) return;
 
         // [Ação] Tudo validado em tempo real (O(1)). Capturar a corrida!
         try {
