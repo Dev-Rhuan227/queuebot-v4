@@ -34,11 +34,11 @@ curl -X POST http://localhost:3005/session/start \
 
 2. **Pegue o QR Code**:
 ```bash
-# Fique rodando este até aparecer a string gigante do Base64
+# Fique rodando este até aparecer a string gigante (que começa com 1@ ou 2@)
 curl http://localhost:3005/session/SEUTELEFONEAQUI@c.us/status
 ```
 
-*(Pegue apenas a gigantesca string Base64 que virá na variável `qr`, cole no seu navegador em formato URL ou em um decodificador online (https://codebeautify.org/base64-to-image-converter), e escaneie o código com seu celular.)*
+*(Copie a gigantesca string que virá na variável `qr` (Exemplo: `2@PiQ...`), acesse um site criador de QR Code como o https://www.the-qrcode-generator.com/, clique em "Text/Free Text", cole essa string lá, e escaneie o código quadrado que vai aparecer na tela com seu WhatsApp do celular!)*
 
 Quando o status mudar via Curl para `CONNECTED`, o bot está pronto.
 
